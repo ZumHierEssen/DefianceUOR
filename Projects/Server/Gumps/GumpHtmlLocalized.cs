@@ -1,228 +1,197 @@
-/***************************************************************************
- *                            GumpHtmlLocalized.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpHtmlLocalized.cs                                            *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public enum GumpHtmlLocalizedType
-  {
-    Plain,
-    Color,
-    Args
-  }
-
-  public class GumpHtmlLocalized : GumpEntry
-  {
-    private static byte[] m_LayoutNamePlain = Gump.StringToBuffer("xmfhtmlgump");
-    private static byte[] m_LayoutNameColor = Gump.StringToBuffer("xmfhtmlgumpcolor");
-    private static byte[] m_LayoutNameArgs = Gump.StringToBuffer("xmfhtmltok");
-    private string m_Args;
-    private bool m_Background, m_Scrollbar;
-    private int m_Color;
-    private int m_Number;
-
-    private GumpHtmlLocalizedType m_Type;
-    private int m_Width, m_Height;
-    private int m_X, m_Y;
-
-    public GumpHtmlLocalized(int x, int y, int width, int height, int number,
-      bool background = false, bool scrollbar = false)
+    public enum GumpHtmlLocalizedType
     {
-      m_X = x;
-      m_Y = y;
-      m_Width = width;
-      m_Height = height;
-      m_Number = number;
-      m_Background = background;
-      m_Scrollbar = scrollbar;
-
-      m_Type = GumpHtmlLocalizedType.Plain;
+        Plain,
+        Color,
+        Args
     }
 
-    public GumpHtmlLocalized(int x, int y, int width, int height, int number, int color,
-      bool background = false, bool scrollbar = false)
+    public class GumpHtmlLocalized : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_Width = width;
-      m_Height = height;
-      m_Number = number;
-      m_Color = color;
-      m_Background = background;
-      m_Scrollbar = scrollbar;
+        public static readonly byte[] LayoutNamePlain = Gump.StringToBuffer("xmfhtmlgump");
+        public static readonly byte[] LayoutNameColor = Gump.StringToBuffer("xmfhtmlgumpcolor");
+        public static readonly byte[] LayoutNameArgs = Gump.StringToBuffer("xmfhtmltok");
 
-      m_Type = GumpHtmlLocalizedType.Color;
-    }
-
-    public GumpHtmlLocalized(int x, int y, int width, int height, int number, string args, int color,
-      bool background = false, bool scrollbar = false)
-    {
-      // Are multiple arguments unsupported? And what about non ASCII arguments?
-
-      m_X = x;
-      m_Y = y;
-      m_Width = width;
-      m_Height = height;
-      m_Number = number;
-      m_Args = args;
-      m_Color = color;
-      m_Background = background;
-      m_Scrollbar = scrollbar;
-
-      m_Type = GumpHtmlLocalizedType.Args;
-    }
-
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
-
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
-
-    public int Width
-    {
-      get => m_Width;
-      set => Delta(ref m_Width, value);
-    }
-
-    public int Height
-    {
-      get => m_Height;
-      set => Delta(ref m_Height, value);
-    }
-
-    public int Number
-    {
-      get => m_Number;
-      set => Delta(ref m_Number, value);
-    }
-
-    public string Args
-    {
-      get => m_Args;
-      set => Delta(ref m_Args, value);
-    }
-
-    public int Color
-    {
-      get => m_Color;
-      set => Delta(ref m_Color, value);
-    }
-
-    public bool Background
-    {
-      get => m_Background;
-      set => Delta(ref m_Background, value);
-    }
-
-    public bool Scrollbar
-    {
-      get => m_Scrollbar;
-      set => Delta(ref m_Scrollbar, value);
-    }
-
-    public GumpHtmlLocalizedType Type
-    {
-      get => m_Type;
-      set
-      {
-        if (m_Type != value)
+        public GumpHtmlLocalized(
+            int x, int y, int width, int height, int number,
+            bool background = false, bool scrollbar = false
+        )
         {
-          m_Type = value;
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            Number = number;
+            Background = background;
+            Scrollbar = scrollbar;
 
-          Parent?.Invalidate();
-        }
-      }
-    }
-
-    public override string Compile(NetState ns)
-    {
-      return m_Type switch
-      {
-        GumpHtmlLocalizedType.Plain =>
-        $"{{ xmfhtmlgump {m_X} {m_Y} {m_Width} {m_Height} {m_Number} {(m_Background ? 1 : 0)} {(m_Scrollbar ? 1 : 0)} }}",
-        GumpHtmlLocalizedType.Color =>
-        $"{{ xmfhtmlgumpcolor {m_X} {m_Y} {m_Width} {m_Height} {m_Number} {(m_Background ? 1 : 0)} {(m_Scrollbar ? 1 : 0)} {m_Color} }}",
-        _ =>
-        $"{{ xmfhtmltok {m_X} {m_Y} {m_Width} {m_Height} {(m_Background ? 1 : 0)} {(m_Scrollbar ? 1 : 0)} {m_Color} {m_Number} @{m_Args}@ }}"
-      };
-    }
-
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      switch (m_Type)
-      {
-        case GumpHtmlLocalizedType.Plain:
-        {
-          disp.AppendLayout(m_LayoutNamePlain);
-
-          disp.AppendLayout(m_X);
-          disp.AppendLayout(m_Y);
-          disp.AppendLayout(m_Width);
-          disp.AppendLayout(m_Height);
-          disp.AppendLayout(m_Number);
-          disp.AppendLayout(m_Background);
-          disp.AppendLayout(m_Scrollbar);
-
-          break;
+            Type = GumpHtmlLocalizedType.Plain;
         }
 
-        case GumpHtmlLocalizedType.Color:
+        public GumpHtmlLocalized(
+            int x, int y, int width, int height, int number, int color,
+            bool background = false, bool scrollbar = false
+        )
         {
-          disp.AppendLayout(m_LayoutNameColor);
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            Number = number;
+            Color = color;
+            Background = background;
+            Scrollbar = scrollbar;
 
-          disp.AppendLayout(m_X);
-          disp.AppendLayout(m_Y);
-          disp.AppendLayout(m_Width);
-          disp.AppendLayout(m_Height);
-          disp.AppendLayout(m_Number);
-          disp.AppendLayout(m_Background);
-          disp.AppendLayout(m_Scrollbar);
-          disp.AppendLayout(m_Color);
-
-          break;
+            Type = GumpHtmlLocalizedType.Color;
         }
 
-        case GumpHtmlLocalizedType.Args:
+        public GumpHtmlLocalized(
+            int x, int y, int width, int height, int number, string args, int color,
+            bool background = false, bool scrollbar = false
+        )
         {
-          disp.AppendLayout(m_LayoutNameArgs);
+            // Are multiple arguments unsupported? And what about non ASCII arguments?
 
-          disp.AppendLayout(m_X);
-          disp.AppendLayout(m_Y);
-          disp.AppendLayout(m_Width);
-          disp.AppendLayout(m_Height);
-          disp.AppendLayout(m_Background);
-          disp.AppendLayout(m_Scrollbar);
-          disp.AppendLayout(m_Color);
-          disp.AppendLayout(m_Number);
-          disp.AppendLayout(m_Args);
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            Number = number;
+            Args = args;
+            Color = color;
+            Background = background;
+            Scrollbar = scrollbar;
 
-          break;
+            Type = GumpHtmlLocalizedType.Args;
         }
-      }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public int Number { get; set; }
+
+        public string Args { get; set; }
+
+        public int Color { get; set; }
+
+        public bool Background { get; set; }
+
+        public bool Scrollbar { get; set; }
+
+        public GumpHtmlLocalizedType Type { get; set; }
+
+        public override string Compile(OrderedHashSet<string> strings) =>
+            Type switch
+            {
+                GumpHtmlLocalizedType.Plain =>
+                    $"{{ xmfhtmlgump {X} {Y} {Width} {Height} {Number} {(Background ? 1 : 0)} {(Scrollbar ? 1 : 0)} }}",
+                GumpHtmlLocalizedType.Color =>
+                    $"{{ xmfhtmlgumpcolor {X} {Y} {Width} {Height} {Number} {(Background ? 1 : 0)} {(Scrollbar ? 1 : 0)} {Color} }}",
+                _ =>
+                    $"{{ xmfhtmltok {X} {Y} {Width} {Height} {(Background ? 1 : 0)} {(Scrollbar ? 1 : 0)} {Color} {Number} @{Args}@ }}"
+            };
+
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+
+            switch (Type)
+            {
+                case GumpHtmlLocalizedType.Plain:
+                    {
+                        writer.Write(LayoutNamePlain);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
+
+                        break;
+                    }
+                case GumpHtmlLocalizedType.Color:
+                    {
+                        writer.Write(LayoutNameColor);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Color.ToString());
+
+                        break;
+                    }
+                case GumpHtmlLocalizedType.Args:
+                    {
+                        writer.Write(LayoutNameArgs);
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(X.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Y.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Width.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Height.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Background ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Scrollbar ? '1' : '0');
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Color.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii(Number.ToString());
+                        writer.WriteAscii(' ');
+                        writer.WriteAscii('@');
+                        writer.WriteAscii(Args ?? "");
+                        writer.WriteAscii('@');
+
+                        break;
+                    }
+            }
+
+            writer.Write((ushort)0x207D); // " }"
+        }
     }
-  }
 }

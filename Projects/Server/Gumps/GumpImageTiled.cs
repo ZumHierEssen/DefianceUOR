@@ -1,83 +1,62 @@
-/***************************************************************************
- *                             GumpImageTiled.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpImageTiled.cs                                               *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public class GumpImageTiled : GumpEntry
-  {
-    private static byte[] m_LayoutName = Gump.StringToBuffer("gumppictiled");
-    private int m_GumpID;
-    private int m_Width, m_Height;
-    private int m_X, m_Y;
-
-    public GumpImageTiled(int x, int y, int width, int height, int gumpID)
+    public class GumpImageTiled : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_Width = width;
-      m_Height = height;
-      m_GumpID = gumpID;
-    }
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("gumppictiled");
 
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
+        public GumpImageTiled(int x, int y, int width, int height, int gumpID)
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            GumpID = gumpID;
+        }
 
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
+        public int X { get; set; }
 
-    public int Width
-    {
-      get => m_Width;
-      set => Delta(ref m_Width, value);
-    }
+        public int Y { get; set; }
 
-    public int Height
-    {
-      get => m_Height;
-      set => Delta(ref m_Height, value);
-    }
+        public int Width { get; set; }
 
-    public int GumpID
-    {
-      get => m_GumpID;
-      set => Delta(ref m_GumpID, value);
-    }
+        public int Height { get; set; }
 
-    public override string Compile(NetState ns) => $"{{ gumppictiled {m_X} {m_Y} {m_Width} {m_Height} {m_GumpID} }}";
+        public int GumpID { get; set; }
+        public override string Compile(OrderedHashSet<string> strings) => $"{{ gumppictiled {X} {Y} {Width} {Height} {GumpID} }}";
 
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      disp.AppendLayout(m_LayoutName);
-      disp.AppendLayout(m_X);
-      disp.AppendLayout(m_Y);
-      disp.AppendLayout(m_Width);
-      disp.AppendLayout(m_Height);
-      disp.AppendLayout(m_GumpID);
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Width.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Height.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(GumpID.ToString());
+            writer.Write((ushort)0x207D); // " }"
+        }
     }
-  }
 }

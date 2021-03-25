@@ -1,94 +1,71 @@
-/***************************************************************************
- *                                GumpRadio.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpRadio.cs                                                    *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public class GumpRadio : GumpEntry
-  {
-    private static byte[] m_LayoutName = Gump.StringToBuffer("radio");
-    private int m_ID1, m_ID2;
-    private bool m_InitialState;
-    private int m_SwitchID;
-    private int m_X, m_Y;
-
-    public GumpRadio(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
+    public class GumpRadio : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_ID1 = inactiveID;
-      m_ID2 = activeID;
-      m_InitialState = initialState;
-      m_SwitchID = switchID;
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("radio");
+
+        public GumpRadio(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
+        {
+            X = x;
+            Y = y;
+            InactiveID = inactiveID;
+            ActiveID = activeID;
+            InitialState = initialState;
+            SwitchID = switchID;
+        }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public int InactiveID { get; set; }
+
+        public int ActiveID { get; set; }
+
+        public bool InitialState { get; set; }
+
+        public int SwitchID { get; set; }
+
+        public override string Compile(OrderedHashSet<string> strings) =>
+            $"{{ radio {X} {Y} {InactiveID} {ActiveID} {(InitialState ? 1 : 0)} {SwitchID} }}";
+
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(InactiveID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(ActiveID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(InitialState ? '1' : '0');
+            writer.WriteAscii(' ');
+            writer.WriteAscii(SwitchID.ToString());
+            writer.Write((ushort)0x207D); // " }"
+
+            switches++;
+        }
     }
-
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
-
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
-
-    public int InactiveID
-    {
-      get => m_ID1;
-      set => Delta(ref m_ID1, value);
-    }
-
-    public int ActiveID
-    {
-      get => m_ID2;
-      set => Delta(ref m_ID2, value);
-    }
-
-    public bool InitialState
-    {
-      get => m_InitialState;
-      set => Delta(ref m_InitialState, value);
-    }
-
-    public int SwitchID
-    {
-      get => m_SwitchID;
-      set => Delta(ref m_SwitchID, value);
-    }
-
-    public override string Compile(NetState ns) => $"{{ radio {m_X} {m_Y} {m_ID1} {m_ID2} {(m_InitialState ? 1 : 0)} {m_SwitchID} }}";
-
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      disp.AppendLayout(m_LayoutName);
-      disp.AppendLayout(m_X);
-      disp.AppendLayout(m_Y);
-      disp.AppendLayout(m_ID1);
-      disp.AppendLayout(m_ID2);
-      disp.AppendLayout(m_InitialState);
-      disp.AppendLayout(m_SwitchID);
-
-      disp.Switches++;
-    }
-  }
 }

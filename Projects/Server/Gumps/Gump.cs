@@ -1,367 +1,261 @@
-/***************************************************************************
- *                                 Gump.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Server.Network;
+using Server.Text;
 
 namespace Server.Gumps
 {
-  public class Gump
-  {
-    private static uint m_NextSerial = 1;
-
-    private static byte[] m_BeginLayout = StringToBuffer("{ ");
-    private static byte[] m_EndLayout = StringToBuffer(" }");
-
-    private static byte[] m_NoMove = StringToBuffer("{ nomove }");
-    private static byte[] m_NoClose = StringToBuffer("{ noclose }");
-    private static byte[] m_NoDispose = StringToBuffer("{ nodispose }");
-    private static byte[] m_NoResize = StringToBuffer("{ noresize }");
-    private bool m_Closable = true;
-    private bool m_Disposable = true;
-
-    private bool m_Draggable = true;
-    private bool m_Resizable = true;
-
-    private uint m_Serial;
-    private List<string> m_Strings;
-
-    internal int m_TextEntries, m_Switches;
-    private int m_X, m_Y;
-
-    public Gump(int x, int y)
+    public class Gump
     {
-      do
-      {
-        m_Serial = m_NextSerial++;
-      } while (m_Serial == 0); // standard client apparently doesn't send a gump response packet if serial == 0
+        private static uint m_NextSerial = 1;
 
-      m_X = x;
-      m_Y = y;
+        public static readonly byte[] NoMove = StringToBuffer("{ nomove }");
+        public static readonly byte[] NoClose = StringToBuffer("{ noclose }");
+        public static readonly byte[] NoDispose = StringToBuffer("{ nodispose }");
+        public static readonly byte[] NoResize = StringToBuffer("{ noresize }");
 
-      TypeID = GetTypeID(GetType());
+        internal int m_TextEntries, m_Switches;
 
-      Entries = new List<GumpEntry>();
-      m_Strings = new List<string>();
-    }
-
-    public int TypeID{ get; }
-
-    public List<GumpEntry> Entries{ get; }
-
-    public uint Serial
-    {
-      get => m_Serial;
-      set
-      {
-        if (m_Serial != value)
+        public Gump(int x, int y)
         {
-          m_Serial = value;
-          Invalidate();
-        }
-      }
-    }
+            do
+            {
+                Serial = m_NextSerial++;
+            } while (Serial == 0); // standard client apparently doesn't send a gump response packet if serial == 0
 
-    public int X
-    {
-      get => m_X;
-      set
-      {
-        if (m_X != value)
+            X = x;
+            Y = y;
+
+            TypeID = GetTypeID(GetType());
+
+            Entries = new List<GumpEntry>();
+            Strings = new List<string>();
+        }
+
+        public List<string> Strings { get; }
+
+        public int TypeID { get; }
+
+        public List<GumpEntry> Entries { get; }
+
+        public Serial Serial { get; set; }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public bool Disposable { get; set; } = true;
+
+        public bool Resizable { get; set; } = true;
+
+        public bool Draggable { get; set; } = true;
+
+        public bool Closable { get; set; } = true;
+
+        public static int GetTypeID(Type type) => type?.FullName?.GetHashCode(StringComparison.Ordinal) ?? -1;
+
+        public void AddPage(int page)
         {
-          m_X = value;
-          Invalidate();
+            Add(new GumpPage(page));
         }
-      }
-    }
 
-    public int Y
-    {
-      get => m_Y;
-      set
-      {
-        if (m_Y != value)
+        public void AddAlphaRegion(int x, int y, int width, int height)
         {
-          m_Y = value;
-          Invalidate();
+            Add(new GumpAlphaRegion(x, y, width, height));
         }
-      }
-    }
 
-    public bool Disposable
-    {
-      get => m_Disposable;
-      set
-      {
-        if (m_Disposable != value)
+        public void AddBackground(int x, int y, int width, int height, int gumpID)
         {
-          m_Disposable = value;
-          Invalidate();
+            Add(new GumpBackground(x, y, width, height, gumpID));
         }
-      }
-    }
 
-    public bool Resizable
-    {
-      get => m_Resizable;
-      set
-      {
-        if (m_Resizable != value)
+        public void AddButton(
+            int x, int y, int normalID, int pressedID, int buttonID,
+            GumpButtonType type = GumpButtonType.Reply, int param = 0
+        )
         {
-          m_Resizable = value;
-          Invalidate();
+            Add(new GumpButton(x, y, normalID, pressedID, buttonID, type, param));
         }
-      }
-    }
 
-    public bool Draggable
-    {
-      get => m_Draggable;
-      set
-      {
-        if (m_Draggable != value)
+        public void AddCheck(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
         {
-          m_Draggable = value;
-          Invalidate();
+            Add(new GumpCheck(x, y, inactiveID, activeID, initialState, switchID));
         }
-      }
-    }
 
-    public bool Closable
-    {
-      get => m_Closable;
-      set
-      {
-        if (m_Closable != value)
+        public void AddGroup(int group)
         {
-          m_Closable = value;
-          Invalidate();
+            Add(new GumpGroup(group));
         }
-      }
+
+        public void AddTooltip(int number, string args = null)
+        {
+            Add(new GumpTooltip(number, args));
+        }
+
+        public void AddHtml(
+            int x, int y, int width, int height, string text, bool background = false, bool scrollbar = false
+        )
+        {
+            Add(new GumpHtml(x, y, width, height, text, background, scrollbar));
+        }
+
+        public void AddHtmlLocalized(
+            int x, int y, int width, int height, int number, bool background = false,
+            bool scrollbar = false
+        )
+        {
+            Add(new GumpHtmlLocalized(x, y, width, height, number, background, scrollbar));
+        }
+
+        public void AddHtmlLocalized(
+            int x, int y, int width, int height, int number, int color, bool background = false,
+            bool scrollbar = false
+        )
+        {
+            Add(new GumpHtmlLocalized(x, y, width, height, number, color, background, scrollbar));
+        }
+
+        public void AddHtmlLocalized(
+            int x, int y, int width, int height, int number, string args, int color,
+            bool background = false, bool scrollbar = false
+        )
+        {
+            Add(new GumpHtmlLocalized(x, y, width, height, number, args, color, background, scrollbar));
+        }
+
+        public void AddImage(int x, int y, int gumpID, int hue = 0)
+        {
+            Add(new GumpImage(x, y, gumpID, hue));
+        }
+
+        public void AddImageTiled(int x, int y, int width, int height, int gumpID)
+        {
+            Add(new GumpImageTiled(x, y, width, height, gumpID));
+        }
+
+        public void AddImageTiledButton(
+            int x, int y, int normalID, int pressedID, int buttonID, GumpButtonType type,
+            int param, int itemID, int hue, int width, int height, int localizedTooltip = -1
+        )
+        {
+            Add(
+                new GumpImageTileButton(
+                    x,
+                    y,
+                    normalID,
+                    pressedID,
+                    buttonID,
+                    type,
+                    param,
+                    itemID,
+                    hue,
+                    width,
+                    height,
+                    localizedTooltip
+                )
+            );
+        }
+
+        public void AddItem(int x, int y, int itemID, int hue = 0)
+        {
+            Add(new GumpItem(x, y, itemID, hue));
+        }
+
+        public void AddLabel(int x, int y, int hue, string text)
+        {
+            Add(new GumpLabel(x, y, hue, text));
+        }
+
+        public void AddLabelCropped(int x, int y, int width, int height, int hue, string text)
+        {
+            Add(new GumpLabelCropped(x, y, width, height, hue, text));
+        }
+
+        public void AddRadio(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
+        {
+            Add(new GumpRadio(x, y, inactiveID, activeID, initialState, switchID));
+        }
+
+        public void AddTextEntry(int x, int y, int width, int height, int hue, int entryID, string initialText)
+        {
+            Add(new GumpTextEntry(x, y, width, height, hue, entryID, initialText));
+        }
+
+        public void AddTextEntry(int x, int y, int width, int height, int hue, int entryID, string initialText, int size)
+        {
+            Add(new GumpTextEntryLimited(x, y, width, height, hue, entryID, initialText, size));
+        }
+
+        public void AddItemProperty(uint serial)
+        {
+            Add(new GumpItemProperty(serial));
+        }
+
+        public void AddSpriteImage(int x, int y, int gumpID, int width, int height, int sx, int sy)
+        {
+            Add(new GumpSpriteImage(x, y, gumpID, width, height, sx, sy));
+        }
+
+        public void AddECHandleInput()
+        {
+            Add(new GumpECHandleInput());
+        }
+
+        public void AddGumpIDOverride(int gumpID)
+        {
+            Add(new GumpMasterGump(gumpID));
+        }
+
+        public void Add(GumpEntry g)
+        {
+            if (g.Parent != this)
+            {
+                g.Parent = this;
+            }
+            else if (!Entries.Contains(g))
+            {
+                Entries.Add(g);
+            }
+        }
+
+        public void Remove(GumpEntry g)
+        {
+            if (g == null || !Entries.Contains(g))
+            {
+                return;
+            }
+
+            Entries.Remove(g);
+            g.Parent = null;
+        }
+
+        public int Intern(string value)
+        {
+            var indexOf = Strings.IndexOf(value);
+
+            if (indexOf >= 0)
+            {
+                return indexOf;
+            }
+
+            Strings.Add(value);
+            return Strings.Count - 1;
+        }
+
+        public void SendTo(NetState state)
+        {
+            state.AddGump(this);
+            state.SendDisplayGump(this, out m_Switches, out m_TextEntries);
+        }
+
+        public static byte[] StringToBuffer(string str) => str.GetBytesAscii();
+
+        public virtual void OnResponse(NetState sender, RelayInfo info)
+        {
+        }
+
+        public virtual void OnServerClose(NetState owner)
+        {
+        }
     }
-
-    public static int GetTypeID(Type type) => type?.FullName?.GetHashCode() ?? -1;
-
-    public void Invalidate()
-    {
-      //if ( m_Strings.Count > 0 )
-      //	m_Strings.Clear();
-    }
-
-    public void AddPage(int page)
-    {
-      Add(new GumpPage(page));
-    }
-
-    public void AddAlphaRegion(int x, int y, int width, int height)
-    {
-      Add(new GumpAlphaRegion(x, y, width, height));
-    }
-
-    public void AddBackground(int x, int y, int width, int height, int gumpID)
-    {
-      Add(new GumpBackground(x, y, width, height, gumpID));
-    }
-
-    public void AddButton(int x, int y, int normalID, int pressedID, int buttonID,
-      GumpButtonType type = GumpButtonType.Reply, int param = 0)
-    {
-      Add(new GumpButton(x, y, normalID, pressedID, buttonID, type, param));
-    }
-
-    public void AddCheck(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
-    {
-      Add(new GumpCheck(x, y, inactiveID, activeID, initialState, switchID));
-    }
-
-    public void AddGroup(int group)
-    {
-      Add(new GumpGroup(group));
-    }
-
-    public void AddTooltip(int number)
-    {
-      Add(new GumpTooltip(number));
-    }
-
-    public void AddHtml(int x, int y, int width, int height, string text, bool background = false, bool scrollbar = false)
-    {
-      Add(new GumpHtml(x, y, width, height, text, background, scrollbar));
-    }
-
-    public void AddHtmlLocalized(int x, int y, int width, int height, int number, bool background = false, bool scrollbar = false)
-    {
-      Add(new GumpHtmlLocalized(x, y, width, height, number, background, scrollbar));
-    }
-
-    public void AddHtmlLocalized(int x, int y, int width, int height, int number, int color, bool background = false,
-      bool scrollbar = false)
-    {
-      Add(new GumpHtmlLocalized(x, y, width, height, number, color, background, scrollbar));
-    }
-
-    public void AddHtmlLocalized(int x, int y, int width, int height, int number, string args, int color,
-      bool background = false, bool scrollbar = false)
-    {
-      Add(new GumpHtmlLocalized(x, y, width, height, number, args, color, background, scrollbar));
-    }
-
-    public void AddImage(int x, int y, int gumpID, int hue = 0)
-    {
-      Add(new GumpImage(x, y, gumpID, hue));
-    }
-
-    public void AddImageTiled(int x, int y, int width, int height, int gumpID)
-    {
-      Add(new GumpImageTiled(x, y, width, height, gumpID));
-    }
-
-    public void AddImageTiledButton(int x, int y, int normalID, int pressedID, int buttonID, GumpButtonType type,
-      int param, int itemID, int hue, int width, int height, int localizedTooltip = -1)
-    {
-      Add(new GumpImageTileButton(x, y, normalID, pressedID, buttonID, type, param, itemID, hue, width, height,
-        localizedTooltip));
-    }
-
-    public void AddItem(int x, int y, int itemID, int hue = 0)
-    {
-      Add(new GumpItem(x, y, itemID, hue));
-    }
-
-    public void AddLabel(int x, int y, int hue, string text)
-    {
-      Add(new GumpLabel(x, y, hue, text));
-    }
-
-    public void AddLabelCropped(int x, int y, int width, int height, int hue, string text)
-    {
-      Add(new GumpLabelCropped(x, y, width, height, hue, text));
-    }
-
-    public void AddRadio(int x, int y, int inactiveID, int activeID, bool initialState, int switchID)
-    {
-      Add(new GumpRadio(x, y, inactiveID, activeID, initialState, switchID));
-    }
-
-    public void AddTextEntry(int x, int y, int width, int height, int hue, int entryID, string initialText, int size = 0)
-    {
-      Add(new GumpTextEntryLimited(x, y, width, height, hue, entryID, initialText, size));
-    }
-
-    public void AddItemProperty(uint serial)
-    {
-      Add(new GumpItemProperty(serial));
-    }
-
-    public void Add(GumpEntry g)
-    {
-      if (g.Parent != this)
-      {
-        g.Parent = this;
-      }
-      else if (!Entries.Contains(g))
-      {
-        Invalidate();
-        Entries.Add(g);
-      }
-    }
-
-    public void Remove(GumpEntry g)
-    {
-      if (g == null || !Entries.Contains(g))
-        return;
-
-      Invalidate();
-      Entries.Remove(g);
-      g.Parent = null;
-    }
-
-    public int Intern(string value)
-    {
-      int indexOf = m_Strings.IndexOf(value);
-
-      if (indexOf >= 0) return indexOf;
-
-      Invalidate();
-      m_Strings.Add(value);
-      return m_Strings.Count - 1;
-    }
-
-    public void SendTo(NetState state)
-    {
-      state.AddGump(this);
-      state.Send(Compile(state));
-    }
-
-    public static byte[] StringToBuffer(string str) => Encoding.ASCII.GetBytes(str);
-
-    private Packet Compile(NetState ns = null)
-    {
-      IGumpWriter disp;
-
-      if (ns?.Unpack == true)
-        disp = new DisplayGumpPacked(this);
-      else
-        disp = new DisplayGumpFast(this);
-
-      if (!m_Draggable)
-        disp.AppendLayout(m_NoMove);
-
-      if (!m_Closable)
-        disp.AppendLayout(m_NoClose);
-
-      if (!m_Disposable)
-        disp.AppendLayout(m_NoDispose);
-
-      if (!m_Resizable)
-        disp.AppendLayout(m_NoResize);
-
-      int count = Entries.Count;
-
-      for (int i = 0; i < count; ++i)
-      {
-        GumpEntry e = Entries[i];
-
-        disp.AppendLayout(m_BeginLayout);
-        e.AppendTo(ns, disp);
-        disp.AppendLayout(m_EndLayout);
-      }
-
-      disp.WriteStrings(m_Strings);
-
-      disp.Flush();
-
-      m_TextEntries = disp.TextEntries;
-      m_Switches = disp.Switches;
-
-      return (Packet)disp;
-    }
-
-    public virtual void OnResponse(NetState sender, RelayInfo info)
-    {
-    }
-
-    public virtual void OnServerClose(NetState owner)
-    {
-    }
-  }
 }

@@ -1,52 +1,63 @@
-ModernUO
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/3953314/92417551-a00d7600-f117-11ea-9c28-bb03bbdb1954.png" width=128px />
+</p>
+
+ModernUO [![Discord](https://img.shields.io/discord/751317910504603701?logo=discord&style=social)](https://discord.gg/NUhe7Pq9gF) [![Subreddit subscribers](https://img.shields.io/reddit/subreddit-subscribers/modernuo?style=social&label=/r/modernuo)](https://www.reddit.com/r/ModernUO/) [![Twitter Follow](https://img.shields.io/twitter/follow/modernuo?label=@modernuo&style=social)](https://twitter.com/modernuo) [![Gitter](https://img.shields.io/gitter/room/modernuo/modernuo?logo=gitter&logoColor=46BC99&style=social)](https://gitter.im/modernuo/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 =====
 
-Ultima Online Server Emulator for the modern era!
+##### Ultima Online Server Emulator for the modern era!
+[![.NET](https://img.shields.io/badge/.NET-%205.0-5C2D91)](https://dotnet.microsoft.com/download/dotnet/5.0)
+<br />
+![Windows](https://img.shields.io/badge/-server%202019-0078D6?logo=windows)
+![OSX](https://img.shields.io/badge/-big%20sur-222222?logo=apple&logoColor=white)
+![Debian](https://img.shields.io/badge/-buster-A81D33?logo=debian)
+![Ubuntu](https://img.shields.io/badge/-20LTS-E95420?logo=ubuntu&logoColor=white)
+![CentOS](https://img.shields.io/badge/-8.1-262577?logo=centos&logoColor=white)
+<br/>
+[![GitHub license](https://img.shields.io/github/license/modernuo/ModernUO?color=blue)](https://github.com/modernuo/ModernUO/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/modernuo/ModernUO?logo=github)](https://github.com/modernuo/ModernUO/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/modernuo/ModernUO?logo=github)](https://github.com/modernuo/ModernUO/issues)
+<br />
+[![GitHub build](https://img.shields.io/github/workflow/status/modernuo/ModernUO/Build?logo=github)](https://github.com/modernuo/ModernUO/actions)
+[![AzurePipelines build](https://dev.azure.com/modernuo/modernuo/_apis/build/status/Build?branchName=master)](https://dev.azure.com/modernuo/modernuo/_build/latest?definitionId=1&branchName=master)
 
-### Join and Follow!
-[Discord Channel](https://discord.gg/VdyCpjQ)  
-[Twitter](https://www.twitter.com/modernuo)  
-[Reddit](https://www.reddit.com/r/modernuo)  
+## Building the server
+#### Requirements
+- [.NET 5 SDK](https://dotnet.microsoft.com/download/dotnet/5.0)
 
-### Goals
-- See [Goals](./GOALS.md)
+#### Publishing Builds
+- Using terminal or powershell: `./publish.cmd [release|debug (default: release)] [os]`
+  - `os` - [Supported operating systems](https://github.com/dotnet/core/blob/master/release-notes/5.0/5.0-supported-os.md)
+    - `win` - Windows 8.1/10/2016/2019
+    - `osx` - MacOS 10.13+/11.0 (High Sierra, Mojave, Catalina, & Big Sur)
+    - `ubuntu.16.04`, `ubuntu.18.04` `ubuntu.20.04` - Ubuntu LTS
+    - `debian.9`, `debian.10` - Debian
+    - `centos.7`, `centos.8` - CentOS
+    - If blank, the operating system running the build is used
 
-# Requirements to Compile
-- [.NET Core 3.0 SDK](https://dotnet.microsoft.com/download/dotnet-core/3.0)
-- [System.IO.Pipelines 4.6.0](https://www.nuget.org/packages/System.IO.Pipelines/) (Restored automatically during publishing)
+## Deploying / Running Server
+- Follow the [publish](https://github.com/modernuo/ModernUO#publishing-a-build) instructions
+- Copy `Distribution` directory to the production server
 
-### Requirements to Run
-- zlib (Linux only)
+#### Requirements
+- [.NET 5 Runtime](https://dotnet.microsoft.com/download/dotnet/5.0)
 
-### Building with .NET Core 3.0 SDK
-`dotnet publish /p:PublishProfile=[platform][-SelfContained]`
-- `platform` can be `Windows`, `Linux`, or `OSX` (capitalization matters)
-- Appending `-SelfContained` will export all .NET Core files required to run portably.
+#### Running
+- `dotnet ModernUO.dll`
 
-### Running
-- Follow the build instructions
-- Go to `Distribution` directory
+#### Cleaning
+- `dotnet clean`
 
-##### Windows
-- Run `ModernUO.exe` or `dotnet ModernUO.dll`
-
-##### OSX or Linux
-- Run `./ModernUO` or `dotnet ./ModernUO.dll`
-
-### Thanks
+## Thanks
 - RunUO Team & Community
 - ServUO Team & Community
-- [Jaedan](https://github.com/jaedan) and the ClassicUO Community
+- [Karasho](https://github.com/andreakarasho), [Jaedan](https://github.com/jaedan) and the ClassicUO Community
 
-### Troubleshooting / FAQ
+## Troubleshooting / FAQ
+- See [FAQ](./FAQ.md)
 
-##### Where do I go to run ModernUO?
-Everything is run from the `Distribution` directory.
-This folder is portable, so it can be moved to the production server for deployments.
+## Want to sponsor?
+Thank you for supporting us! You can find out how by visiting the [sponsors](./SPONSORS.md) page.
 
-##### My scripts folder is not compiling during runtime, what happened?
-NET Core does not support dynamic compiling. Scripts are now compiled separately and moved to the `Distribution/Assemblies` directory.
-This also allows us to divide content into packages that can be included by dropping in the DLL.
-
-##### Why can't I run ModernUO on a 32-bit operating system?
-ModernUO is optimized for performance and modern hardware.
+</br></br>
+<p align=center>Development Tools provided with &hearts; by <br><a href="https://www.jetbrains.com/?from=ModernUO"><img src="https://user-images.githubusercontent.com/3953314/86882249-cfb2ea00-c0a4-11ea-9cec-bf3f3bcc6f28.png" width="100px" /></a></p>

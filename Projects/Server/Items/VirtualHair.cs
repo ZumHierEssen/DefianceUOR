@@ -1,159 +1,150 @@
-/***************************************************************************
- *                          VirtualHair.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
-
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
+using System;
+using System.Buffers;
+using System.Runtime.CompilerServices;
 using Server.Network;
 
 namespace Server
 {
-  public abstract class BaseHairInfo
-  {
-    protected BaseHairInfo(int itemid, int hue = 0)
+    public static class OutgoingVirtualHairPackets
     {
-      ItemID = itemid;
-      Hue = hue;
-    }
+        public const int EquipUpdatePacketLength = 15;
+        public const int RemovePacketLength = 5;
 
-    protected BaseHairInfo(GenericReader reader)
-    {
-      int version = reader.ReadInt();
-
-      switch (version)
-      {
-        case 0:
+        public static void SendHairEquipUpdatePacket(this NetState ns, Mobile m, Serial hairSerial, Layer layer)
         {
-          ItemID = reader.ReadInt();
-          Hue = reader.ReadInt();
-          break;
+            if (ns == null)
+            {
+                return;
+            }
+
+            Span<byte> buffer = stackalloc byte[EquipUpdatePacketLength];
+            CreateHairEquipUpdatePacket(buffer, m, hairSerial, layer);
+            ns.Send(buffer);
         }
-      }
+
+        public static void CreateHairEquipUpdatePacket(Span<byte> buffer, Mobile m, Serial hairSerial, Layer layer)
+        {
+            if (buffer[0] != 0)
+            {
+                return;
+            }
+
+            var hue = m.SolidHueOverride >= 0 ? m.SolidHueOverride : m.HairHue;
+
+            var writer = new SpanWriter(buffer);
+            writer.Write((byte)0x2E); // Packet ID
+
+            writer.Write(hairSerial);
+            writer.Write((short)m.HairItemID);
+            writer.Write((byte)0);
+            writer.Write((byte)layer);
+            writer.Write(m.Serial);
+            writer.Write((short)hue);
+        }
+
+        public static void SendRemoveHairPacket(this NetState ns, Serial hairSerial)
+        {
+            if (ns == null)
+            {
+                return;
+            }
+
+            Span<byte> buffer = stackalloc byte[RemovePacketLength];
+            CreateRemoveHairPacket(buffer, hairSerial);
+            ns.Send(buffer);
+        }
+
+        public static void CreateRemoveHairPacket(Span<byte> buffer, Serial hairSerial)
+        {
+            if (buffer[0] != 0)
+            {
+                return;
+            }
+
+            var writer = new SpanWriter(buffer);
+            writer.Write((byte)0x1D); // Packet ID
+            writer.Write(hairSerial);
+        }
     }
 
-    [CommandProperty(AccessLevel.GameMaster)]
-    public int ItemID{ get; set; }
-
-    [CommandProperty(AccessLevel.GameMaster)]
-    public int Hue{ get; set; }
-
-    public virtual void Serialize(GenericWriter writer)
+    public abstract class BaseHairInfo
     {
-      writer.Write(0); //version
-      writer.Write(ItemID);
-      writer.Write(Hue);
-    }
-  }
+        protected BaseHairInfo(int itemid, int hue = 0)
+        {
+            ItemID = itemid;
+            Hue = hue;
+        }
 
-  public class HairInfo : BaseHairInfo
-  {
-    public HairInfo(int itemid)
-      : base(itemid)
+        protected BaseHairInfo(IGenericReader reader)
+        {
+            var version = reader.ReadInt();
+
+            switch (version)
+            {
+                case 0:
+                    {
+                        ItemID = reader.ReadInt();
+                        Hue = reader.ReadInt();
+                        break;
+                    }
+            }
+        }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int ItemID { get; set; }
+
+        [CommandProperty(AccessLevel.GameMaster)]
+        public int Hue { get; set; }
+
+        public virtual void Serialize(IGenericWriter writer)
+        {
+            writer.Write(0); // version
+            writer.Write(ItemID);
+            writer.Write(Hue);
+        }
+    }
+
+    public class HairInfo : BaseHairInfo
     {
+        public HairInfo(int itemid)
+            : base(itemid)
+        {
+        }
+
+        public HairInfo(int itemid, int hue)
+            : base(itemid, hue)
+        {
+        }
+
+        public HairInfo(IGenericReader reader)
+            : base(reader)
+        {
+        }
+
+        // TODO: Can we make this higher for newer clients?
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint FakeSerial(Serial m) => 0x7FFFFFFF - 0x400 - m * 4;
     }
 
-    public HairInfo(int itemid, int hue)
-      : base(itemid, hue)
+    public class FacialHairInfo : BaseHairInfo
     {
+        public FacialHairInfo(int itemid)
+            : base(itemid)
+        {
+        }
+
+        public FacialHairInfo(int itemid, int hue)
+            : base(itemid, hue)
+        {
+        }
+
+        public FacialHairInfo(IGenericReader reader)
+            : base(reader)
+        {
+        }
+
+        // TODO: Can we make this higher for newer clients?
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint FakeSerial(Serial m) => 0x7FFFFFFF - 0x400 - 1 - m * 4;
     }
-
-    public HairInfo(GenericReader reader)
-      : base(reader)
-    {
-    }
-
-    // TOOD: Can we make this higher for newer clients?
-    public static uint FakeSerial(Mobile parent) => 0x7FFFFFFF - 0x400 - parent.Serial * 4;
-  }
-
-  public class FacialHairInfo : BaseHairInfo
-  {
-    public FacialHairInfo(int itemid)
-      : base(itemid)
-    {
-    }
-
-    public FacialHairInfo(int itemid, int hue)
-      : base(itemid, hue)
-    {
-    }
-
-    public FacialHairInfo(GenericReader reader)
-      : base(reader)
-    {
-    }
-
-    // TOOD: Can we make this higher for newer clients?
-    public static uint FakeSerial(Mobile parent) => 0x7FFFFFFF - 0x400 - 1 - parent.Serial * 4;
-  }
-
-  public sealed class HairEquipUpdate : Packet
-  {
-    public HairEquipUpdate(Mobile parent)
-      : base(0x2E, 15)
-    {
-      int hue = parent.HairHue;
-
-      if (parent.SolidHueOverride >= 0)
-        hue = parent.SolidHueOverride;
-
-      m_Stream.Write(HairInfo.FakeSerial(parent));
-      m_Stream.Write((short)parent.HairItemID);
-      m_Stream.Write((byte)0);
-      m_Stream.Write((byte)Layer.Hair);
-      m_Stream.Write(parent.Serial);
-      m_Stream.Write((short)hue);
-    }
-  }
-
-  public sealed class FacialHairEquipUpdate : Packet
-  {
-    public FacialHairEquipUpdate(Mobile parent)
-      : base(0x2E, 15)
-    {
-      int hue = parent.FacialHairHue;
-
-      if (parent.SolidHueOverride >= 0)
-        hue = parent.SolidHueOverride;
-
-      m_Stream.Write(FacialHairInfo.FakeSerial(parent));
-      m_Stream.Write((short)parent.FacialHairItemID);
-      m_Stream.Write((byte)0);
-      m_Stream.Write((byte)Layer.FacialHair);
-      m_Stream.Write(parent.Serial);
-      m_Stream.Write((short)hue);
-    }
-  }
-
-  public sealed class RemoveHair : Packet
-  {
-    public RemoveHair(Mobile parent)
-      : base(0x1D, 5)
-    {
-      m_Stream.Write(HairInfo.FakeSerial(parent));
-    }
-  }
-
-  public sealed class RemoveFacialHair : Packet
-  {
-    public RemoveFacialHair(Mobile parent)
-      : base(0x1D, 5)
-    {
-      m_Stream.Write(FacialHairInfo.FakeSerial(parent));
-    }
-  }
 }

@@ -1,80 +1,65 @@
-/***************************************************************************
- *                                GumpItem.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpItem.cs                                                     *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public class GumpItem : GumpEntry
-  {
-    private static byte[] m_LayoutName = Gump.StringToBuffer("tilepic");
-    private static byte[] m_LayoutNameHue = Gump.StringToBuffer("tilepichue");
-    private int m_Hue;
-    private int m_ItemID;
-    private int m_X, m_Y;
-
-    public GumpItem(int x, int y, int itemID, int hue = 0)
+    public class GumpItem : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_ItemID = itemID;
-      m_Hue = hue;
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("tilepic");
+        public static readonly byte[] LayoutNameHue = Gump.StringToBuffer("tilepichue");
+
+        public GumpItem(int x, int y, int itemID, int hue = 0)
+        {
+            X = x;
+            Y = y;
+            ItemID = itemID;
+            Hue = hue;
+        }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public int ItemID { get; set; }
+
+        public int Hue { get; set; }
+
+        public override string Compile(OrderedHashSet<string> strings) =>
+            Hue == 0 ? $"{{ tilepic {X} {Y} {ItemID} }}" : $"{{ tilepichue {X} {Y} {ItemID} {Hue} }}";
+
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(Hue == 0 ? LayoutName : LayoutNameHue);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(ItemID.ToString());
+
+            if (Hue != 0)
+            {
+                writer.WriteAscii(' ');
+                writer.WriteAscii(Hue.ToString());
+            }
+
+            writer.Write((ushort)0x207D); // " }"
+        }
     }
-
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
-
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
-
-    public int ItemID
-    {
-      get => m_ItemID;
-      set => Delta(ref m_ItemID, value);
-    }
-
-    public int Hue
-    {
-      get => m_Hue;
-      set => Delta(ref m_Hue, value);
-    }
-
-    public override string Compile(NetState ns) =>
-      m_Hue == 0 ? $"{{ tilepic {m_X} {m_Y} {m_ItemID} }}" :
-        $"{{ tilepichue {m_X} {m_Y} {m_ItemID} {m_Hue} }}";
-
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      disp.AppendLayout(m_Hue == 0 ? m_LayoutName : m_LayoutNameHue);
-      disp.AppendLayout(m_X);
-      disp.AppendLayout(m_Y);
-      disp.AppendLayout(m_ItemID);
-
-      if (m_Hue != 0)
-        disp.AppendLayout(m_Hue);
-    }
-  }
 }

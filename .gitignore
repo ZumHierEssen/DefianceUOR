@@ -1,42 +1,32 @@
+# Distribution Files
 /Distribution/ModernUO
 /Distribution/ModernUO.*
 /Distribution/Assemblies
+/Distribution/Configuration/modernuo.json
+/Distribution/Configuration/email-settings.json
+/Distribution/Configuration/throttles.json
 /Distribution/Logs
 /Distribution/Backups
 /Distribution/Saves
-/Distribution/System.IO.Pipelines.dll
-/Distribution/rdrand.so
-/Distribution/rdrand.dll
+/Distribution/docs
 /Distribution/zlib.dll
+/Distribution/libz.dylib
+/Distribution/libz.so
+/Distribution/ZLib.Bindings.dll
+/Distribution/Microsoft.Toolkit.HighPerformance.dll
+/Distribution/runtimes
+/Distribution/nohup.out
+/Distribution/ref
 
-# LibUv Dependencies
-/Distribution/libuv.dll
-/Distribution/libuv.so
-/Distribution/Microsoft.AspNetCore.Connections.Abstractions.dll
-/Distribution/Microsoft.AspNetCore.Http.Features.dll
-/Distribution/Microsoft.Extensions.Configuration.Abstractions.dll
-/Distribution/Microsoft.Extensions.Configuration.Binder.dll
-/Distribution/Microsoft.Extensions.Configuration.dll
-/Distribution/Microsoft.Extensions.DependencyInjection.Abstractions.dll
-/Distribution/Microsoft.Extensions.DependencyInjection.dll
-/Distribution/Microsoft.Extensions.FileProviders.Abstractions.dll
-/Distribution/Microsoft.Extensions.Hosting.Abstractions.dll
-/Distribution/Microsoft.Extensions.Logging.Abstractions.dll
-/Distribution/Microsoft.Extensions.Logging.Configuration.dll
-/Distribution/Microsoft.Extensions.Logging.Console.dll
-/Distribution/Microsoft.Extensions.Logging.dll
-/Distribution/Microsoft.Extensions.Options.ConfigurationExtensions.dll
-/Distribution/Microsoft.Extensions.Options.dll
-/Distribution/Microsoft.Extensions.Primitives.dll
-
-/Projects/Scripts/obj
-/Projects/Scripts/bin
-/Projects/Server/obj
-/Projects/Server/bin
+/Projects/*/obj
+/Projects/*/bin
 
 *.log
 *.user
 /.idea
 /.vs
+/.vscode
 
 .DS_Store
+
+/packages/*

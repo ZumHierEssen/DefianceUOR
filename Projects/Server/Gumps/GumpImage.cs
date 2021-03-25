@@ -1,83 +1,75 @@
-/***************************************************************************
- *                               GumpImage.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpImage.cs                                                    *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public class GumpImage : GumpEntry
-  {
-    private static byte[] m_LayoutName = Gump.StringToBuffer("gumppic");
-    private static byte[] m_HueEquals = Gump.StringToBuffer(" hue=");
-    private int m_GumpID;
-    private int m_Hue;
-    private int m_X, m_Y;
-
-    public GumpImage(int x, int y, int gumpID, int hue = 0)
+    public class GumpImage : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_GumpID = gumpID;
-      m_Hue = hue;
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("gumppic");
+        public static readonly byte[] HueEquals = Gump.StringToBuffer(" hue=");
+        public static readonly byte[] ClassEquals = Gump.StringToBuffer(" class=");
+
+        public GumpImage(int x, int y, int gumpID, int hue = 0, string cls = null)
+        {
+            X = x;
+            Y = y;
+            GumpID = gumpID;
+            Hue = hue;
+            Class = cls;
+        }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public int GumpID { get; set; }
+
+        public int Hue { get; set; }
+
+        public string Class { get; set; }
+
+        public override string Compile(OrderedHashSet<string> strings) =>
+            $"{{ gumppic {X} {Y} {GumpID}{(Hue == 0 ? "" : $"hue={Hue}")}{(string.IsNullOrEmpty(Class) ? "" : $"class={Class}")} }}";
+
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(GumpID.ToString());
+
+            if (Hue != 0)
+            {
+                writer.Write(HueEquals);
+                writer.WriteAscii(Hue.ToString());
+            }
+
+            if (!string.IsNullOrWhiteSpace(Class))
+            {
+                writer.Write(ClassEquals);
+                writer.WriteAscii(Class);
+            }
+
+            writer.Write((ushort)0x207D); // " }"
+        }
     }
-
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
-
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
-
-    public int GumpID
-    {
-      get => m_GumpID;
-      set => Delta(ref m_GumpID, value);
-    }
-
-    public int Hue
-    {
-      get => m_Hue;
-      set => Delta(ref m_Hue, value);
-    }
-
-    public override string Compile(NetState ns) =>
-      m_Hue == 0 ? $"{{ gumppic {m_X} {m_Y} {m_GumpID} }}" :
-        $"{{ gumppic {m_X} {m_Y} {m_GumpID} hue={m_Hue} }}";
-
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      disp.AppendLayout(m_LayoutName);
-      disp.AppendLayout(m_X);
-      disp.AppendLayout(m_Y);
-      disp.AppendLayout(m_GumpID);
-
-      if (m_Hue != 0)
-      {
-        disp.AppendLayout(m_HueEquals);
-        disp.AppendLayoutNS(m_Hue);
-      }
-    }
-  }
 }

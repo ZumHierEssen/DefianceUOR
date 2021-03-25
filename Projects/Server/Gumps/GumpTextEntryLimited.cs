@@ -1,112 +1,83 @@
-/***************************************************************************
- *                          GumpTextEntryLimited.cs
- *                            -------------------
- *   begin                : May 1, 2002
- *   copyright            : (C) The RunUO Software Team
- *   email                : info@runuo.com
- *
- *   $Id$
- *
- ***************************************************************************/
+/*************************************************************************
+ * ModernUO                                                              *
+ * Copyright (C) 2019-2021 - ModernUO Development Team                   *
+ * Email: hi@modernuo.com                                                *
+ * File: GumpTextEntryLimited.cs                                         *
+ *                                                                       *
+ * This program is free software: you can redistribute it and/or modify  *
+ * it under the terms of the GNU General Public License as published by  *
+ * the Free Software Foundation, either version 3 of the License, or     *
+ * (at your option) any later version.                                   *
+ *                                                                       *
+ * You should have received a copy of the GNU General Public License     *
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. *
+ *************************************************************************/
 
-/***************************************************************************
- *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- ***************************************************************************/
-
-using Server.Network;
+using System.Buffers;
+using Server.Collections;
 
 namespace Server.Gumps
 {
-  public class GumpTextEntryLimited : GumpEntry
-  {
-    private static byte[] m_LayoutName = Gump.StringToBuffer("textentrylimited");
-    private int m_EntryID;
-    private int m_Hue;
-    private string m_InitialText;
-    private int m_Size;
-    private int m_Width, m_Height;
-    private int m_X, m_Y;
-
-    public GumpTextEntryLimited(int x, int y, int width, int height, int hue, int entryID, string initialText, int size = 0)
+    public class GumpTextEntryLimited : GumpEntry
     {
-      m_X = x;
-      m_Y = y;
-      m_Width = width;
-      m_Height = height;
-      m_Hue = hue;
-      m_EntryID = entryID;
-      m_InitialText = initialText;
-      m_Size = size;
+        public static readonly byte[] LayoutName = Gump.StringToBuffer("textentrylimited");
+
+        public GumpTextEntryLimited(
+            int x, int y, int width, int height, int hue, int entryID, string initialText, int size = 0
+        )
+        {
+            X = x;
+            Y = y;
+            Width = width;
+            Height = height;
+            Hue = hue;
+            EntryID = entryID;
+            InitialText = initialText;
+            Size = size;
+        }
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
+
+        public int Width { get; set; }
+
+        public int Height { get; set; }
+
+        public int Hue { get; set; }
+
+        public int EntryID { get; set; }
+
+        public string InitialText { get; set; }
+
+        public int Size { get; set; }
+
+        public override string Compile(OrderedHashSet<string> strings) =>
+            $"{{ textentrylimited {X} {Y} {Width} {Height} {Hue} {EntryID} {strings.GetOrAdd(InitialText ?? "")} {Size} }}";
+
+        public override void AppendTo(ref SpanWriter writer, OrderedHashSet<string> strings, ref int entries, ref int switches)
+        {
+            writer.Write((ushort)0x7B20); // "{ "
+            writer.Write(LayoutName);
+            writer.WriteAscii(' ');
+            writer.WriteAscii(X.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Y.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Width.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Height.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Hue.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(EntryID.ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(strings.GetOrAdd(InitialText ?? "").ToString());
+            writer.WriteAscii(' ');
+            writer.WriteAscii(Size.ToString());
+            writer.Write((ushort)0x207D); // " }"
+
+            entries++;
+        }
     }
-
-    public int X
-    {
-      get => m_X;
-      set => Delta(ref m_X, value);
-    }
-
-    public int Y
-    {
-      get => m_Y;
-      set => Delta(ref m_Y, value);
-    }
-
-    public int Width
-    {
-      get => m_Width;
-      set => Delta(ref m_Width, value);
-    }
-
-    public int Height
-    {
-      get => m_Height;
-      set => Delta(ref m_Height, value);
-    }
-
-    public int Hue
-    {
-      get => m_Hue;
-      set => Delta(ref m_Hue, value);
-    }
-
-    public int EntryID
-    {
-      get => m_EntryID;
-      set => Delta(ref m_EntryID, value);
-    }
-
-    public string InitialText
-    {
-      get => m_InitialText;
-      set => Delta(ref m_InitialText, value);
-    }
-
-    public int Size
-    {
-      get => m_Size;
-      set => Delta(ref m_Size, value);
-    }
-
-    public override string Compile(NetState ns) => $"{{ textentrylimited {m_X} {m_Y} {m_Width} {m_Height} {m_Hue} {m_EntryID} {Parent.Intern(m_InitialText)} {m_Size} }}";
-
-    public override void AppendTo(NetState ns, IGumpWriter disp)
-    {
-      disp.AppendLayout(m_LayoutName);
-      disp.AppendLayout(m_X);
-      disp.AppendLayout(m_Y);
-      disp.AppendLayout(m_Width);
-      disp.AppendLayout(m_Height);
-      disp.AppendLayout(m_Hue);
-      disp.AppendLayout(m_EntryID);
-      disp.AppendLayout(Parent.Intern(m_InitialText));
-      disp.AppendLayout(m_Size);
-
-      disp.TextEntries++;
-    }
-  }
 }
