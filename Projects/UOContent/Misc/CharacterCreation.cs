@@ -1,9 +1,11 @@
-using System;
 using Server.Accounting;
 using Server.Factions;
 using Server.Items;
 using Server.Mobiles;
 using Server.Network;
+using Server.Special_Systems.YoungPlayerProgram;
+using System;
+
 
 namespace Server.Misc
 {
@@ -38,6 +40,7 @@ namespace Server.Misc
             PackItem(new Gold(1000)); // Starting gold can be customized here
             PackItem(new Dagger());
             PackItem(new Candle());
+            //PackItem(new YoungPlayerDeed());
         }
 
         private static Item MakeNewbie(Item item)
@@ -700,6 +703,7 @@ namespace Server.Misc
 
             newChar.MoveToWorld(city.Location, city.Map);
 
+            
             Console.WriteLine("Login: {0}: New character being created (account={1})", state, args.Account.Username);
             Console.WriteLine(" - Character: {0} (serial={1})", newChar.Name, newChar.Serial);
             Console.WriteLine(" - Started: {0} {1} in {2}", city.City, city.Location, city.Map);
@@ -791,7 +795,8 @@ namespace Server.Misc
                     }
             }
 
-            return useHaven ? m_NewHavenInfo : args.City;
+            //return useHaven ? m_NewHavenInfo : args.City;
+            return args.City;
         }
 
         private static void FixStats(ref int str, ref int dex, ref int intel, int max)
