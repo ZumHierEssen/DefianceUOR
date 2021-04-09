@@ -163,7 +163,7 @@ namespace Server
                     2,
                     "Renaissance",
                     ClientFlags.Trammel,
-                    FeatureFlags.ExpansionUOR,
+                    FeatureFlags.ExpansionLBR | FeatureFlags.ExpansionUOR,
                     CharacterListFlags.ExpansionUOR,
                     HousingFlags.None
                 ),
