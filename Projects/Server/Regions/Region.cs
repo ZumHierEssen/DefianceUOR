@@ -796,6 +796,9 @@ namespace Server
                 if (newRChild >= oldRChild)
                 {
                     newR?.OnEnter(m);
+
+                    EventSink.InvokeOnEnterRegion(m, oldRegion, newR);
+
                     newR = newR?.Parent;
                 }
             }
