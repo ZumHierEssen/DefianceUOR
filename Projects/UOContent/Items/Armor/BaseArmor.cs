@@ -449,18 +449,18 @@ namespace Server.Items
             {
                 return Layer switch
                 {
-                    Layer.Neck       => ArmorBodyType.Gorget,
-                    Layer.TwoHanded  => ArmorBodyType.Shield,
-                    Layer.Gloves     => ArmorBodyType.Gloves,
-                    Layer.Helm       => ArmorBodyType.Helmet,
-                    Layer.Arms       => ArmorBodyType.Arms,
-                    Layer.InnerLegs  => ArmorBodyType.Legs,
-                    Layer.OuterLegs  => ArmorBodyType.Legs,
-                    Layer.Pants      => ArmorBodyType.Legs,
+                    Layer.Neck => ArmorBodyType.Gorget,
+                    Layer.TwoHanded => ArmorBodyType.Shield,
+                    Layer.Gloves => ArmorBodyType.Gloves,
+                    Layer.Helm => ArmorBodyType.Helmet,
+                    Layer.Arms => ArmorBodyType.Arms,
+                    Layer.InnerLegs => ArmorBodyType.Legs,
+                    Layer.OuterLegs => ArmorBodyType.Legs,
+                    Layer.Pants => ArmorBodyType.Legs,
                     Layer.InnerTorso => ArmorBodyType.Chest,
                     Layer.OuterTorso => ArmorBodyType.Chest,
-                    Layer.Shirt      => ArmorBodyType.Chest,
-                    _                => ArmorBodyType.Gorget
+                    Layer.Shirt => ArmorBodyType.Chest,
+                    _ => ArmorBodyType.Gorget
                 };
             }
         }
@@ -828,11 +828,11 @@ namespace Server.Items
         {
             return m_Protection switch
             {
-                ArmorProtectionLevel.Guarding        => 1,
-                ArmorProtectionLevel.Hardening       => 2,
-                ArmorProtectionLevel.Fortification   => 3,
+                ArmorProtectionLevel.Guarding => 1,
+                ArmorProtectionLevel.Hardening => 2,
+                ArmorProtectionLevel.Fortification => 3,
                 ArmorProtectionLevel.Invulnerability => 4,
-                _                                    => 0
+                _ => 0
             };
         }
 
@@ -1493,10 +1493,10 @@ namespace Server.Items
                             {
                                 ArmorMaterialType.Studded => CraftResource.RegularLeather,
                                 ArmorMaterialType.Leather => CraftResource.RegularLeather,
-                                ArmorMaterialType.Spined  => CraftResource.SpinedLeather,
-                                ArmorMaterialType.Horned  => CraftResource.HornedLeather,
-                                ArmorMaterialType.Barbed  => CraftResource.BarbedLeather,
-                                _                         => CraftResource.Iron
+                                ArmorMaterialType.Spined => CraftResource.SpinedLeather,
+                                ArmorMaterialType.Horned => CraftResource.HornedLeather,
+                                ArmorMaterialType.Barbed => CraftResource.BarbedLeather,
+                                _ => CraftResource.Iron
                             };
                         }
 
@@ -1567,8 +1567,16 @@ namespace Server.Items
                 return false;
             }
 
+
             if (from.AccessLevel < AccessLevel.GameMaster)
             {
+                //#region ItemID_Mods
+                //if (m_Identified == false)
+                //{
+                //    from.SendMessage("You are hesitant to put on something that is unknown to you");
+                //    return false;
+                //}
+                //#endregion
                 if (RequiredRace != null && from.Race != RequiredRace)
                 {
                     if (RequiredRace == Race.Elf)
@@ -1634,6 +1642,7 @@ namespace Server.Items
                 }
             }
 
+
             return base.CanEquip(from);
         }
 
@@ -1648,7 +1657,7 @@ namespace Server.Items
             {
                 Layer.Pants => m.FindItemOnLayer(Layer.InnerLegs) != null,
                 Layer.Shirt => m.FindItemOnLayer(Layer.InnerTorso) != null,
-                _           => false
+                _ => false
             };
         }
 
@@ -1711,24 +1720,24 @@ namespace Server.Items
         {
             var oreType = m_Resource switch
             {
-                CraftResource.DullCopper    => 1053108,
-                CraftResource.ShadowIron    => 1053107,
-                CraftResource.Copper        => 1053106,
-                CraftResource.Bronze        => 1053105,
-                CraftResource.Gold          => 1053104,
-                CraftResource.Agapite       => 1053103,
-                CraftResource.Verite        => 1053102,
-                CraftResource.Valorite      => 1053101,
+                CraftResource.DullCopper => 1053108,
+                CraftResource.ShadowIron => 1053107,
+                CraftResource.Copper => 1053106,
+                CraftResource.Bronze => 1053105,
+                CraftResource.Gold => 1053104,
+                CraftResource.Agapite => 1053103,
+                CraftResource.Verite => 1053102,
+                CraftResource.Valorite => 1053101,
                 CraftResource.SpinedLeather => 1061118,
                 CraftResource.HornedLeather => 1061117,
                 CraftResource.BarbedLeather => 1061116,
-                CraftResource.RedScales     => 1060814,
-                CraftResource.YellowScales  => 1060818,
-                CraftResource.BlackScales   => 1060820,
-                CraftResource.GreenScales   => 1060819,
-                CraftResource.WhiteScales   => 1060821,
-                CraftResource.BlueScales    => 1060815,
-                _                           => 0
+                CraftResource.RedScales => 1060814,
+                CraftResource.YellowScales => 1060818,
+                CraftResource.BlackScales => 1060820,
+                CraftResource.GreenScales => 1060819,
+                CraftResource.WhiteScales => 1060821,
+                CraftResource.BlueScales => 1060815,
+                _ => 0
             };
 
             if (m_Quality == ArmorQuality.Exceptional)
@@ -1810,163 +1819,173 @@ namespace Server.Items
             SkillBonuses.GetProperties(list);
 
             int prop;
-
-            if ((prop = ArtifactRarity) > 0)
+            #region ItemID_Modifications
+            if (m_Identified)
             {
-                list.Add(1061078, prop.ToString()); // artifact rarity ~1_val~
+                if ((prop = ArtifactRarity) > 0)
+                {
+                    list.Add(1061078, prop.ToString()); // artifact rarity ~1_val~
+                }
+
+                if ((prop = Attributes.WeaponDamage) != 0)
+                {
+                    list.Add(1060401, prop.ToString()); // damage increase ~1_val~%
+                }
+
+                if ((prop = Attributes.DefendChance) != 0)
+                {
+                    list.Add(1060408, prop.ToString()); // defense chance increase ~1_val~%
+                }
+
+                if ((prop = Attributes.BonusDex) != 0)
+                {
+                    list.Add(1060409, prop.ToString()); // dexterity bonus ~1_val~
+                }
+
+                if ((prop = Attributes.EnhancePotions) != 0)
+                {
+                    list.Add(1060411, prop.ToString()); // enhance potions ~1_val~%
+                }
+
+                if ((prop = Attributes.CastRecovery) != 0)
+                {
+                    list.Add(1060412, prop.ToString()); // faster cast recovery ~1_val~
+                }
+
+                if ((prop = Attributes.CastSpeed) != 0)
+                {
+                    list.Add(1060413, prop.ToString()); // faster casting ~1_val~
+                }
+
+                if ((prop = Attributes.AttackChance) != 0)
+                {
+                    list.Add(1060415, prop.ToString()); // hit chance increase ~1_val~%
+                }
+
+                if ((prop = Attributes.BonusHits) != 0)
+                {
+                    list.Add(1060431, prop.ToString()); // hit point increase ~1_val~
+                }
+
+                if ((prop = Attributes.BonusInt) != 0)
+                {
+                    list.Add(1060432, prop.ToString()); // intelligence bonus ~1_val~
+                }
+
+                if ((prop = Attributes.LowerManaCost) != 0)
+                {
+                    list.Add(1060433, prop.ToString()); // lower mana cost ~1_val~%
+                }
+
+                if ((prop = Attributes.LowerRegCost) != 0)
+                {
+                    list.Add(1060434, prop.ToString()); // lower reagent cost ~1_val~%
+                }
+
+                if ((prop = GetLowerStatReq()) != 0)
+                {
+                    list.Add(1060435, prop.ToString()); // lower requirements ~1_val~%
+                }
+
+                if ((prop = GetLuckBonus() + Attributes.Luck) != 0)
+                {
+                    list.Add(1060436, prop.ToString()); // luck ~1_val~
+                }
+
+                if (ArmorAttributes.MageArmor != 0)
+                {
+                    list.Add(1060437); // mage armor
+                }
+
+                if ((prop = Attributes.BonusMana) != 0)
+                {
+                    list.Add(1060439, prop.ToString()); // mana increase ~1_val~
+                }
+
+                if ((prop = Attributes.RegenMana) != 0)
+                {
+                    list.Add(1060440, prop.ToString()); // mana regeneration ~1_val~
+                }
+
+                if (Attributes.NightSight != 0)
+                {
+                    list.Add(1060441); // night sight
+                }
+
+                if ((prop = Attributes.ReflectPhysical) != 0)
+                {
+                    list.Add(1060442, prop.ToString()); // reflect physical damage ~1_val~%
+                }
+
+                if ((prop = Attributes.RegenStam) != 0)
+                {
+                    list.Add(1060443, prop.ToString()); // stamina regeneration ~1_val~
+                }
+
+                if ((prop = Attributes.RegenHits) != 0)
+                {
+                    list.Add(1060444, prop.ToString()); // hit point regeneration ~1_val~
+                }
+
+                if ((prop = ArmorAttributes.SelfRepair) != 0)
+                {
+                    list.Add(1060450, prop.ToString()); // self repair ~1_val~
+                }
+
+                if (Attributes.SpellChanneling != 0)
+                {
+                    list.Add(1060482); // spell channeling
+                }
+
+                if ((prop = Attributes.SpellDamage) != 0)
+                {
+                    list.Add(1060483, prop.ToString()); // spell damage increase ~1_val~%
+                }
+
+                if ((prop = Attributes.BonusStam) != 0)
+                {
+                    list.Add(1060484, prop.ToString()); // stamina increase ~1_val~
+                }
+
+                if ((prop = Attributes.BonusStr) != 0)
+                {
+                    list.Add(1060485, prop.ToString()); // strength bonus ~1_val~
+                }
+
+                if ((prop = Attributes.WeaponSpeed) != 0)
+                {
+                    list.Add(1060486, prop.ToString()); // swing speed increase ~1_val~%
+                }
+
+                if (Core.ML && (prop = Attributes.IncreasedKarmaLoss) != 0)
+                {
+                    list.Add(1075210, prop.ToString()); // Increased Karma Loss ~1val~%
+                }
+
+                AddResistanceProperties(list);
+
+                if ((prop = GetDurabilityBonus()) > 0)
+                {
+                    list.Add(1060410, prop.ToString()); // durability ~1_val~%
+                }
+
+                if ((prop = ComputeStatReq(StatType.Str)) > 0)
+                {
+                    list.Add(1061170, prop.ToString()); // strength requirement ~1_val~
+                }
+
+                if (m_HitPoints >= 0 && m_MaxHitPoints > 0)
+                {
+                    list.Add(1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints); // durability ~1_val~ / ~2_val~
+                }
+            }
+            else
+            {
+                list.Add(1060847, "<CENTER><BASEFONT COLOR=#0000FF>Unidentified</BASEFONT></CENTER>");
             }
 
-            if ((prop = Attributes.WeaponDamage) != 0)
-            {
-                list.Add(1060401, prop.ToString()); // damage increase ~1_val~%
-            }
 
-            if ((prop = Attributes.DefendChance) != 0)
-            {
-                list.Add(1060408, prop.ToString()); // defense chance increase ~1_val~%
-            }
-
-            if ((prop = Attributes.BonusDex) != 0)
-            {
-                list.Add(1060409, prop.ToString()); // dexterity bonus ~1_val~
-            }
-
-            if ((prop = Attributes.EnhancePotions) != 0)
-            {
-                list.Add(1060411, prop.ToString()); // enhance potions ~1_val~%
-            }
-
-            if ((prop = Attributes.CastRecovery) != 0)
-            {
-                list.Add(1060412, prop.ToString()); // faster cast recovery ~1_val~
-            }
-
-            if ((prop = Attributes.CastSpeed) != 0)
-            {
-                list.Add(1060413, prop.ToString()); // faster casting ~1_val~
-            }
-
-            if ((prop = Attributes.AttackChance) != 0)
-            {
-                list.Add(1060415, prop.ToString()); // hit chance increase ~1_val~%
-            }
-
-            if ((prop = Attributes.BonusHits) != 0)
-            {
-                list.Add(1060431, prop.ToString()); // hit point increase ~1_val~
-            }
-
-            if ((prop = Attributes.BonusInt) != 0)
-            {
-                list.Add(1060432, prop.ToString()); // intelligence bonus ~1_val~
-            }
-
-            if ((prop = Attributes.LowerManaCost) != 0)
-            {
-                list.Add(1060433, prop.ToString()); // lower mana cost ~1_val~%
-            }
-
-            if ((prop = Attributes.LowerRegCost) != 0)
-            {
-                list.Add(1060434, prop.ToString()); // lower reagent cost ~1_val~%
-            }
-
-            if ((prop = GetLowerStatReq()) != 0)
-            {
-                list.Add(1060435, prop.ToString()); // lower requirements ~1_val~%
-            }
-
-            if ((prop = GetLuckBonus() + Attributes.Luck) != 0)
-            {
-                list.Add(1060436, prop.ToString()); // luck ~1_val~
-            }
-
-            if (ArmorAttributes.MageArmor != 0)
-            {
-                list.Add(1060437); // mage armor
-            }
-
-            if ((prop = Attributes.BonusMana) != 0)
-            {
-                list.Add(1060439, prop.ToString()); // mana increase ~1_val~
-            }
-
-            if ((prop = Attributes.RegenMana) != 0)
-            {
-                list.Add(1060440, prop.ToString()); // mana regeneration ~1_val~
-            }
-
-            if (Attributes.NightSight != 0)
-            {
-                list.Add(1060441); // night sight
-            }
-
-            if ((prop = Attributes.ReflectPhysical) != 0)
-            {
-                list.Add(1060442, prop.ToString()); // reflect physical damage ~1_val~%
-            }
-
-            if ((prop = Attributes.RegenStam) != 0)
-            {
-                list.Add(1060443, prop.ToString()); // stamina regeneration ~1_val~
-            }
-
-            if ((prop = Attributes.RegenHits) != 0)
-            {
-                list.Add(1060444, prop.ToString()); // hit point regeneration ~1_val~
-            }
-
-            if ((prop = ArmorAttributes.SelfRepair) != 0)
-            {
-                list.Add(1060450, prop.ToString()); // self repair ~1_val~
-            }
-
-            if (Attributes.SpellChanneling != 0)
-            {
-                list.Add(1060482); // spell channeling
-            }
-
-            if ((prop = Attributes.SpellDamage) != 0)
-            {
-                list.Add(1060483, prop.ToString()); // spell damage increase ~1_val~%
-            }
-
-            if ((prop = Attributes.BonusStam) != 0)
-            {
-                list.Add(1060484, prop.ToString()); // stamina increase ~1_val~
-            }
-
-            if ((prop = Attributes.BonusStr) != 0)
-            {
-                list.Add(1060485, prop.ToString()); // strength bonus ~1_val~
-            }
-
-            if ((prop = Attributes.WeaponSpeed) != 0)
-            {
-                list.Add(1060486, prop.ToString()); // swing speed increase ~1_val~%
-            }
-
-            if (Core.ML && (prop = Attributes.IncreasedKarmaLoss) != 0)
-            {
-                list.Add(1075210, prop.ToString()); // Increased Karma Loss ~1val~%
-            }
-
-            AddResistanceProperties(list);
-
-            if ((prop = GetDurabilityBonus()) > 0)
-            {
-                list.Add(1060410, prop.ToString()); // durability ~1_val~%
-            }
-
-            if ((prop = ComputeStatReq(StatType.Str)) > 0)
-            {
-                list.Add(1061170, prop.ToString()); // strength requirement ~1_val~
-            }
-
-            if (m_HitPoints >= 0 && m_MaxHitPoints > 0)
-            {
-                list.Add(1060639, "{0}\t{1}", m_HitPoints, m_MaxHitPoints); // durability ~1_val~ / ~2_val~
-            }
+            #endregion
         }
 
         public override void OnSingleClick(Mobile from)
