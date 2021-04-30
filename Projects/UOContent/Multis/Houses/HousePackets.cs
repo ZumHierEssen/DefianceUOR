@@ -18,12 +18,15 @@ using System.Buffers;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using Server.Logging;
 using Server.Network;
 
 namespace Server.Multis
 {
     public static class HousePackets
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(HousePackets));
+
         public static void SendBeginHouseCustomization(this NetState ns, Serial house)
         {
             if (ns == null)
@@ -247,14 +250,14 @@ namespace Server.Multis
         private static void WritePacked(ReadOnlySpan<byte> source, ref SpanWriter writer, out int length)
         {
             var size = source.Length;
-            var dest = writer.RawBuffer.Slice(writer.Position + 3);
+            var dest = writer.RawBuffer[(writer.Position + 3)..];
             length = dest.Length;
 
             var ce = Zlib.Pack(dest, ref length, source, ZlibQuality.Default);
 
             if (ce != ZlibError.Okay)
             {
-                Console.WriteLine("ZLib error: {0} (#{1})", ce, (int)ce);
+                logger.Warning("ZLib error: {0} (#{1})", ce, (int)ce);
                 length = 0;
                 size = 0;
             }

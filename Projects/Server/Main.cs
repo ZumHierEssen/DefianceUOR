@@ -26,12 +26,15 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Server.Json;
+using Server.Logging;
 using Server.Network;
 
 namespace Server
 {
     public static class Core
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(Core));
+
         private static bool _crashed;
         private static Thread _timerThread;
         private static string _baseDirectory;
@@ -297,7 +300,7 @@ namespace Server
                 _ => "CTRL+C"
             };
 
-            WriteConsoleLine($"Detected {keypress} pressed.");
+            logger.Information($"Detected {keypress} pressed.");
             e.Cancel = true;
             Kill();
         }
@@ -340,7 +343,7 @@ namespace Server
         {
             ClosingTokenSource.Cancel();
 
-            Console.Write("Core: Shutting down...");
+            logger.Information("Shutting down");
 
             World.WaitForWriteCompletion();
 
@@ -350,8 +353,6 @@ namespace Server
             }
 
             Timer.TimerThread.Set();
-
-            Console.WriteLine("done");
         }
 
         public static void Main(string[] args)
@@ -410,7 +411,7 @@ namespace Server
             ".TrimMultiline());
             Utility.PopColor();
 
-            WriteConsoleLine($"Running on {RuntimeInformation.FrameworkDescription}");
+            logger.Information($"Running on {RuntimeInformation.FrameworkDescription}");
 
             var ttObj = new Timer.TimerThread();
             _timerThread = new Thread(ttObj.TimerMain)
@@ -422,7 +423,7 @@ namespace Server
 
             if (s.Length > 0)
             {
-                WriteConsoleLine($"Running with arguments: {s}");
+                logger.Information($"Running with arguments: {s}");
             }
 
             ProcessorCount = Environment.ProcessorCount;
@@ -434,17 +435,17 @@ namespace Server
 
             if (MultiProcessor)
             {
-                WriteConsoleLine($"Optimizing for {ProcessorCount} processor{(ProcessorCount == 1 ? "" : "s")}");
+                logger.Information($"Optimizing for {ProcessorCount} processor{(ProcessorCount == 1 ? "" : "s")}");
             }
 
             Console.CancelKeyPress += Console_CancelKeyPressed;
 
             if (GCSettings.IsServerGC)
             {
-                WriteConsoleLine(": Server garbage collection mode enabled");
+                logger.Information("Server garbage collection mode enabled");
             }
 
-            WriteConsoleLine($"High resolution timing ({(Stopwatch.IsHighResolution ? "Supported" : "Unsupported")})");
+            logger.Information($"High resolution timing ({(Stopwatch.IsHighResolution ? "Supported" : "Unsupported")})");
 
             ServerConfiguration.Load();
 
@@ -604,18 +605,6 @@ namespace Server
             {
                 Parallel.ForEach(assembly.GetTypes(), VerifyType);
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void WriteConsole(string message)
-        {
-            Console.Write("Core: {0}", message);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void WriteConsoleLine(string message)
-        {
-            Console.WriteLine("Core: {0}", message);
         }
     }
 }

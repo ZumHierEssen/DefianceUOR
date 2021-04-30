@@ -169,6 +169,8 @@ namespace Server
             {
                 T t = entry.Entity;
 
+                var position = bin.Position;
+
                 // Skip this entry
                 if (t == null)
                 {
@@ -208,18 +210,19 @@ namespace Server
                 }
                 else
                 {
-                    Utility.PushColor(ConsoleColor.Red);
-                    Persistence.WriteConsoleLine($"***** Bad deserialize of {t.GetType()} *****");
-                    Persistence.WriteConsoleLine(error);
-                    Utility.PopColor();
+                    Console.WriteLine($"***** Bad deserialize of {t.GetType()} *****");
+                    Console.WriteLine(error);
 
-                    Persistence.WriteConsoleLine("Delete the object and continue? (y/n)");
+                    Console.WriteLine("Delete the object and continue? (y/n)");
 
                     if (Console.ReadKey(true).Key != ConsoleKey.Y)
                     {
                         throw new Exception("Deserialization failed.");
                     }
+
                     t.Delete();
+                    // Skip this entry
+                    bin.Seek(position + entry.Length, SeekOrigin.Begin);
                 }
             }
         }
@@ -240,20 +243,20 @@ namespace Server
 
                 if (t?.IsAbstract != false)
                 {
-                    Persistence.WriteConsoleLine("failed");
+                    Console.WriteLine("failed");
 
                     var issue = t?.IsAbstract == true ? "marked abstract" : "not found";
 
-                    Persistence.WriteConsoleLine($"Error: Type '{typeName}' was {issue}. Delete all of those types? (y/n)");
+                    Console.WriteLine($"Error: Type '{typeName}' was {issue}. Delete all of those types? (y/n)");
 
                     if (Console.ReadKey(true).Key == ConsoleKey.Y)
                     {
                         types.Add(null);
-                        Persistence.WriteConsole("Loading...");
+                        Console.WriteLine("Loading...");
                         continue;
                     }
 
-                    Persistence.WriteConsoleLine("Types will not be deleted. An exception will be thrown.");
+                    Console.WriteLine("Types will not be deleted. An exception will be thrown.");
 
                     throw new Exception($"Bad type '{typeName}'");
                 }

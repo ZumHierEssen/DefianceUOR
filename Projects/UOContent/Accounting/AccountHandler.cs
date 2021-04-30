@@ -4,6 +4,8 @@ using System.IO;
 using System.Net;
 using Server.Accounting;
 using Server.Engines.Help;
+using Server.Logging;
+using Server.Multis;
 using Server.Network;
 using Server.Regions;
 
@@ -11,6 +13,8 @@ namespace Server.Misc
 {
     public static class AccountHandler
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(AccountHandler));
+
         private static int MaxAccountsPerIP;
         private static bool AutoAccountCreation;
         private static readonly bool RestrictDeletion = !TestCenter.Enabled;
@@ -251,7 +255,7 @@ namespace Server.Misc
                 }
                 else
                 {
-                    state.WriteConsole("Deleting character {0} (0x{1:X})", index, m.Serial.Value);
+                    state.LogInfo("Deleting character {0} (0x{1:X})", index, m.Serial.Value);
 
                     acct.Comments.Add(new AccountComment("System", $"Character #{index + 1} {m} deleted by {state}"));
 
@@ -310,7 +314,7 @@ namespace Server.Misc
 
             if (!CanCreate(state.Address))
             {
-                Console.WriteLine(
+                logger.Information(
                     "Login: {0}: Account '{1}' not created, ip already has {2} account{3}.",
                     state,
                     un,
@@ -320,7 +324,7 @@ namespace Server.Misc
                 return null;
             }
 
-            Console.WriteLine("Login: {0}: Creating new account '{1}'", state, un);
+            logger.Information("Login: {0}: Creating new account '{1}'", state, un);
 
             var a = new Account(un, pw);
 
@@ -334,7 +338,7 @@ namespace Server.Misc
                 e.Accepted = false;
                 e.RejectReason = ALRReason.InUse;
 
-                Console.WriteLine("Login: {0}: Past IP limit threshold", e.State);
+                logger.Information("Login: {0}: Past IP limit threshold", e.State);
 
                 using var op = new StreamWriter("ipLimits.log", true);
                 op.WriteLine("{0}\tPast IP limit threshold\t{1}", e.State, Core.Now);
@@ -362,28 +366,28 @@ namespace Server.Misc
                 }
                 else
                 {
-                    Console.WriteLine("Login: {0}: Invalid username '{1}'", e.State, un);
+                    logger.Information("Login: {0}: Invalid username '{1}'", e.State, un);
                     e.RejectReason = ALRReason.Invalid;
                 }
             }
             else if (!acct.HasAccess(e.State))
             {
-                Console.WriteLine("Login: {0}: Access denied for '{1}'", e.State, un);
+                logger.Information("Login: {0}: Access denied for '{1}'", e.State, un);
                 e.RejectReason = LockdownLevel > AccessLevel.Player ? ALRReason.BadComm : ALRReason.BadPass;
             }
             else if (!acct.CheckPassword(pw))
             {
-                Console.WriteLine("Login: {0}: Invalid password for '{1}'", e.State, un);
+                logger.Information("Login: {0}: Invalid password for '{1}'", e.State, un);
                 e.RejectReason = ALRReason.BadPass;
             }
             else if (acct.Banned)
             {
-                Console.WriteLine("Login: {0}: Banned account '{1}'", e.State, un);
+                logger.Information("Login: {0}: Banned account '{1}'", e.State, un);
                 e.RejectReason = ALRReason.Blocked;
             }
             else
             {
-                Console.WriteLine("Login: {0}: Valid credentials for '{1}'", e.State, un);
+                logger.Information("Login: {0}: Valid credentials for '{1}'", e.State, un);
                 e.State.Account = acct;
                 e.Accepted = true;
 
@@ -402,7 +406,7 @@ namespace Server.Misc
             {
                 e.Accepted = false;
 
-                Console.WriteLine("Login: {0}: Past IP limit threshold", e.State);
+                logger.Warning("Login: {0}: Past IP limit threshold", e.State);
 
                 using var op = new StreamWriter("ipLimits.log", true);
                 op.WriteLine("{0}\tPast IP limit threshold\t{1}", e.State, Core.Now);
@@ -419,24 +423,24 @@ namespace Server.Misc
             }
             else if (!acct.HasAccess(e.State))
             {
-                Console.WriteLine("Login: {0}: Access denied for '{1}'", e.State, un);
+                logger.Information("Login: {0}: Access denied for '{1}'", e.State, un);
                 e.Accepted = false;
             }
             else if (!acct.CheckPassword(pw))
             {
-                Console.WriteLine("Login: {0}: Invalid password for '{1}'", e.State, un);
+                logger.Information("Login: {0}: Invalid password for '{1}'", e.State, un);
                 e.Accepted = false;
             }
             else if (acct.Banned)
             {
-                Console.WriteLine("Login: {0}: Banned account '{1}'", e.State, un);
+                logger.Information("Login: {0}: Banned account '{1}'", e.State, un);
                 e.Accepted = false;
             }
             else
             {
                 acct.LogAccess(e.State);
 
-                Console.WriteLine("Login: {0}: Account '{1}' at character list", e.State, un);
+                logger.Information("Login: {0}: Account '{1}' at character list", e.State, un);
                 e.State.Account = acct;
                 e.Accepted = true;
                 e.CityInfo = StartingCities;

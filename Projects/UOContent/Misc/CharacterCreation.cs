@@ -1,6 +1,7 @@
 using Server.Accounting;
 using Server.Factions;
 using Server.Items;
+using Server.Logging;
 using Server.Mobiles;
 using Server.Network;
 using Server.Special_Systems.YoungPlayerProgram;
@@ -11,6 +12,8 @@ namespace Server.Misc
 {
     public static class CharacterCreation
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(CharacterCreation));
+
         private static readonly TimeSpan BadStartMessageDelay = TimeSpan.FromSeconds(3.5);
 
         private static readonly CityInfo m_NewHavenInfo =
@@ -633,7 +636,7 @@ namespace Server.Misc
 
             if (newChar == null)
             {
-                Console.WriteLine("Login: {0}: Character creation failed, account full", state);
+                logger.Information("Login: {0}: Character creation failed, account full", state);
                 return;
             }
 
@@ -703,10 +706,15 @@ namespace Server.Misc
 
             newChar.MoveToWorld(city.Location, city.Map);
 
-            
-            Console.WriteLine("Login: {0}: New character being created (account={1})", state, args.Account.Username);
-            Console.WriteLine(" - Character: {0} (serial={1})", newChar.Name, newChar.Serial);
-            Console.WriteLine(" - Started: {0} {1} in {2}", city.City, city.Location, city.Map);
+            logger.Information(
+                "Login: {0}: New character being created (account={1}, character={2}, serial={3}, started.city={4}, started.location={5}, started.map={6})",
+                state,
+                args.Account.Username,
+                newChar.Name,
+                newChar.Serial,
+                city.City,
+                city.Location,
+                city.Map);
 
             new WelcomeTimer(newChar).Start();
         }

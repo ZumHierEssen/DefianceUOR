@@ -494,7 +494,6 @@ namespace Server
 
         private Timer m_ExpireAggrTimer;
         private Timer m_ExpireCombatant;
-        private Timer m_ExpireCriminal;
         private FacialHairInfo m_FacialHair;
         private int m_Fame, m_Karma;
         private bool m_Female, m_Warmode, m_Hidden, m_Blessed, m_Flying;
@@ -1889,8 +1888,10 @@ namespace Server
             }
         }
 
+        public Timer ExpireCriminalTimer { get; set; }
+
         [CommandProperty(AccessLevel.Counselor, AccessLevel.GameMaster)]
-        public bool Criminal
+        public virtual bool Criminal
         {
             get => m_Criminal;
             set
@@ -1904,21 +1905,21 @@ namespace Server
 
                 if (m_Criminal)
                 {
-                    if (m_ExpireCriminal == null)
+                    if (ExpireCriminalTimer == null)
                     {
-                        m_ExpireCriminal = Timer.DelayCall(ExpireCriminalDelay, ExpireCriminal);
+                        ExpireCriminalTimer = Timer.DelayCall(ExpireCriminalDelay, ExpireCriminal);
                     }
                     else
                     {
-                        m_ExpireCriminal.Stop();
+                        ExpireCriminalTimer.Stop();
                     }
 
-                    m_ExpireCriminal.Start();
+                    ExpireCriminalTimer.Start();
                 }
-                else if (m_ExpireCriminal != null)
+                else if (ExpireCriminalTimer != null)
                 {
-                    m_ExpireCriminal.Stop();
-                    m_ExpireCriminal = null;
+                    ExpireCriminalTimer.Stop();
+                    ExpireCriminalTimer = null;
                 }
             }
         }
@@ -4809,7 +4810,7 @@ namespace Server
             m_CombatTimer?.Stop();
             m_ExpireCombatant?.Stop();
             m_LogoutTimer?.Stop();
-            m_ExpireCriminal?.Stop();
+            ExpireCriminalTimer?.Stop();
             m_WarmodeTimer?.Stop();
             m_ParaTimer?.Stop();
             m_FrozenTimer?.Stop();
@@ -5791,7 +5792,7 @@ namespace Server
 
                         if (length != regBuffer.Length)
                         {
-                            regBuffer = regBuffer.SliceToLength(length); // Adjust to the actual size
+                            regBuffer = regBuffer[..length]; // Adjust to the actual size
                         }
 
                         heard.OnSpeech(regArgs);
@@ -5805,7 +5806,7 @@ namespace Server
 
                         if (length != mutBuffer.Length)
                         {
-                            mutBuffer = mutBuffer.SliceToLength(length); // Adjust to the actual size
+                            mutBuffer = mutBuffer[..length]; // Adjust to the actual size
                         }
 
                         heard.OnSpeech(mutatedArgs);
@@ -6567,8 +6568,8 @@ namespace Server
 
                         if (m_Criminal)
                         {
-                            m_ExpireCriminal ??= Timer.DelayCall(ExpireCriminalDelay, ExpireCriminal);
-                            m_ExpireCriminal.Start();
+                            ExpireCriminalTimer ??= Timer.DelayCall(ExpireCriminalDelay, ExpireCriminal);
+                            ExpireCriminalTimer.Start();
                         }
 
                         if (ShouldCheckStatTimers)
@@ -9154,7 +9155,7 @@ namespace Server
 
                     if (length != buffer.Length)
                     {
-                        buffer = buffer.SliceToLength(length); // Adjust to the actual size
+                        buffer = buffer[..length]; // Adjust to the actual size
                     }
 
                     state.Send(buffer);
@@ -9185,7 +9186,7 @@ namespace Server
 
                     if (length != buffer.Length)
                     {
-                        buffer = buffer.SliceToLength(length); // Adjust to the actual size
+                        buffer = buffer[..length]; // Adjust to the actual size
                     }
 
                     state.Send(buffer);
@@ -9219,7 +9220,7 @@ namespace Server
 
                     if (length != buffer.Length)
                     {
-                        buffer = buffer.SliceToLength(length); // Adjust to the actual size
+                        buffer = buffer[..length]; // Adjust to the actual size
                     }
 
                     state.Send(buffer);
@@ -9267,7 +9268,7 @@ namespace Server
 
                     if (length != buffer.Length)
                     {
-                        buffer = buffer.SliceToLength(length); // Adjust to the actual size
+                        buffer = buffer[..length]; // Adjust to the actual size
                     }
 
                     state.Send(buffer);
@@ -9298,7 +9299,7 @@ namespace Server
 
                     if (length != buffer.Length)
                     {
-                        buffer = buffer.SliceToLength(length); // Adjust to the actual size
+                        buffer = buffer[..length]; // Adjust to the actual size
                     }
 
                     state.Send(buffer);

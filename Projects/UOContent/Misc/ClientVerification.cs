@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using Server.Gumps;
+using Server.Logging;
 using Server.Mobiles;
 using Server.Network;
 
@@ -9,6 +10,8 @@ namespace Server.Misc
 {
     public static class ClientVerification
     {
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(ClientVerification));
+
         private static bool m_DetectClientRequirement;
         private static OldClientResponse m_OldClientResponse;
 
@@ -65,13 +68,11 @@ namespace Server.Misc
 
             if (Required != null)
             {
-                Utility.PushColor(ConsoleColor.White);
-                Console.WriteLine(
+                logger.Information(
                     "Restricting client version to {0}. Action to be taken: {1}",
                     Required,
                     m_OldClientResponse
                 );
-                Utility.PopColor();
             }
         }
 
@@ -171,7 +172,7 @@ namespace Server.Misc
         {
             if (ns.Connection != null)
             {
-                ns.WriteConsole("Disconnecting, bad version");
+                ns.LogInfo("Disconnecting, bad version");
                 ns.Disconnect($"Invalid client version {ns.Version}.");
             }
         }
