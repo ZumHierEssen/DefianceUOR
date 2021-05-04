@@ -499,7 +499,7 @@ namespace Server.Engines.CannedEvil
                                         }
                                         else
                                         {
-                                            var PS = PowerScroll.CreateRandomNoCraft(5, 5);
+                                            var PS = PowerScroll.CreateRandomForChampions(5, 5);
                                             GiveScrollTo(pm, PS);
                                         }
                                     }
