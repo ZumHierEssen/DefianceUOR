@@ -153,6 +153,7 @@ namespace Server
             m_DiskWriteHandle.WaitOne();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EnqueueForDecay(Item item)
         {
             if (WorldState != WorldState.Saving)
@@ -468,8 +469,6 @@ namespace Server
 
             Broadcast(0x35, true, "The world is saving, please wait.");
 
-            var now = DateTime.UtcNow;
-
             logger.Information("Saving world");
 
             var watch = Stopwatch.StartNew();
@@ -645,5 +644,86 @@ namespace Server
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RemoveGuild(BaseGuild guild) => Guilds.Remove(guild.Serial);
+
+        public static T ReadEntity<T>(this IGenericReader reader) where T : class, ISerializable
+        {
+            Serial serial = reader.ReadUInt();
+            var typeT = typeof(T);
+
+            // Add to this list when creating new serializable types
+            if (typeof(BaseGuild).IsAssignableTo(typeT))
+            {
+                return FindGuild(serial) as T;
+            }
+
+            return FindEntity<IEntity>(serial) as T;
+        }
+
+        public static List<T> ReadEntityList<T>(this IGenericReader reader) where T : class, ISerializable
+        {
+            var count = reader.ReadInt();
+
+            var list = new List<T>(count);
+
+            for (var i = 0; i < count; ++i)
+            {
+                var entity = reader.ReadEntity<T>();
+                if (entity != null)
+                {
+                    list.Add(entity);
+                }
+            }
+
+            return list;
+        }
+
+        public static HashSet<T> ReadEntitySet<T>(this IGenericReader reader) where T : class, ISerializable
+        {
+            var count = reader.ReadInt();
+
+            var set = new HashSet<T>(count);
+
+            for (var i = 0; i < count; ++i)
+            {
+                var entity = reader.ReadEntity<T>();
+                if (entity != null)
+                {
+                    set.Add(entity);
+                }
+            }
+
+            return set;
+        }
+
+        public static void Write(this IGenericWriter writer, ISerializable value)
+        {
+            writer.Write(value?.Deleted != false ? Serial.MinusOne : value.Serial);
+        }
+
+        public static void Write<T>(this IGenericWriter writer, ICollection<T> coll) where T : class, ISerializable
+        {
+            writer.Write(coll.Count);
+            foreach (var entry in coll)
+            {
+                writer.Write(entry);
+            }
+        }
+
+        public static void Write<T>(
+            this IGenericWriter writer, ICollection<T> coll, Action<IGenericWriter, T> action
+        ) where T : class, ISerializable
+        {
+            if (coll == null)
+            {
+                writer.Write(0);
+                return;
+            }
+
+            writer.Write(coll.Count);
+            foreach (var entry in coll)
+            {
+                action(writer, entry);
+            }
+        }
     }
 }
