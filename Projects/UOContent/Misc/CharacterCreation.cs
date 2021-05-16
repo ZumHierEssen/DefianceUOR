@@ -1794,6 +1794,13 @@ namespace Server.Misc
                         PackItem(new SewingKit());
                         break;
                     }
+                case SkillName.Tinkering:
+                    {
+                        PackItem(new TinkerTools());
+                        PackItem(new IronIngot(50));
+                        PackItem(new Log(50));
+                        break;
+                    }
                 case SkillName.Tracking:
                     {
                         var shoes = m_Mobile?.FindItemOnLayer(Layer.Shoes);
