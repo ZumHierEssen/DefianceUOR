@@ -347,7 +347,7 @@ namespace Server.Mobiles
 
                 if (!NoKillAwards)
                 {
-                    GivePowerScrolls();
+                    //GivePowerScrolls(); //disabled statscrolls uncomment to renable
 
                     var map = Map;
 
@@ -384,7 +384,7 @@ namespace Server.Mobiles
                     m_Tentacles.Clear();
 
                     RegisterDamageTo(this);
-                    AwardArtifact(GetArtifact());
+                   // AwardArtifact(GetArtifact());  //disabled artifacts  uncomment to enable
 
                     m_GateItem?.Delete();
                 }
